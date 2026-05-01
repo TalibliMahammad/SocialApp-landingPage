@@ -1,6 +1,8 @@
 import React from 'react';
 
 const Feed = ({ posts }) => {
+
+
   return (
     <div className="flex flex-col gap-6">
       {posts.map((post) => (
