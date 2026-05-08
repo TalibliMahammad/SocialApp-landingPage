@@ -9,9 +9,13 @@ function App() {
   // Səhifə boş başlamalıdır (Tapşırıq tələbi)
   const [posts, setPosts] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [mode, setMode] = useState("light"); // Light/dark mode üçün state  
 
   // PERFORMANCE: useCallback ilə funksiyaları sabit saxlayırıq.
   // Bu, Navbar və Modalın hər dəfə lüzumsuz render olunmasının qarşısını alır.
+
+  
+
   const handleOpenModal = useCallback(() => {
     setIsModalOpen(true);
   }, []);
@@ -34,7 +38,7 @@ function App() {
       <div className="max-w-[1200px] mx-auto flex justify-center gap-8 pt-24 px-4">
         {/* Sol Sidebar */}
         <div className="hidden lg:block w-[240px] sticky top-24 h-fit">
-          <Sidebar />
+          <Sidebar mode={mode} setMode={setMode} />
         </div>
 
         {/* Mərkəzi Post Sahəsi */}

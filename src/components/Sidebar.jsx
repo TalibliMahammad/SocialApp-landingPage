@@ -1,3 +1,4 @@
+import React, { useMemo } from "react"; // React və useMemo əlavə edildi
 import Box from "@mui/material/Box";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
@@ -15,7 +16,8 @@ import AccountBox from "@mui/icons-material/AccountBox";
 import ModeNight from "@mui/icons-material/ModeNight";
 
 const Sidebar = ({ mode, setMode }) => {
-  const menuItems = [
+  // PERFORMANCE: Massivi useMemo ilə keşləyirik ki, hər renderdə yenidən yaranmasın
+  const menuItems = useMemo(() => [
     { text: "Homepage", icon: <Home /> },
     { text: "Pages", icon: <Article /> },
     { text: "Groups", icon: <Group /> },
@@ -23,12 +25,9 @@ const Sidebar = ({ mode, setMode }) => {
     { text: "Friends", icon: <Person /> },
     { text: "Settings", icon: <Settings /> },
     { text: "Profile", icon: <AccountBox /> },
-  ];
+  ], []);
 
-  
-  
-   console.log( "render olundu sidebar");
-
+  console.log("render olundu sidebar");
 
   return (
     <Box flex={1} p={2} sx={{ display: { xs: "none", sm: "block" } }}>
@@ -37,15 +36,25 @@ const Sidebar = ({ mode, setMode }) => {
           {menuItems.map((item) => (
             <ListItem key={item.text} disablePadding>
               <ListItemButton component="a" href={`#${item.text.toLowerCase()}`}>
-                <ListItemIcon>{item.icon}</ListItemIcon>
+                <ListItemIcon 
+                  sx={{ color: mode === "dark" ? "white" : "inherit" }}
+                >
+                  {item.icon}
+                </ListItemIcon>
                 <ListItemText primary={item.text} />
               </ListItemButton>
             </ListItem>
           ))}
           <ListItem disablePadding>
             <ListItemButton>
-              <ListItemIcon><ModeNight /></ListItemIcon>
-              <Switch onChange={() => setMode(mode === "light" ? "dark" : "light")} />
+              <ListItemIcon>
+                <ModeNight sx={{ color: mode === "dark" ? "white" : "inherit" }} />
+              </ListItemIcon>
+              {/* Switch-in vəziyyətini mode-a bağlayırıq */}
+              <Switch 
+                checked={mode === "dark"}
+                onChange={() => setMode(mode === "light" ? "dark" : "light")} 
+              />
             </ListItemButton>
           </ListItem>
         </List>
@@ -54,4 +63,5 @@ const Sidebar = ({ mode, setMode }) => {
   );
 };
 
-export default Sidebar;
+// PERFORMANCE: React.memo lüzumsuz renderlərin qarşısını alır
+export default React.memo(Sidebar);
