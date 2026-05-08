@@ -1,109 +1,97 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 
-const CreatePostModal = ({ open, handleClose, setPosts }) => {
-  const [title, setTitle] = useState("");
-  const [selectedImage, setSelectedImage] = useState(null); // Şəkil faylı
-  const [preview, setPreview] = useState(null); // Ekranda görünən preview URL
-  const fileInputRef = useRef(null);
+const CreatePostModal = ({ isOpen, onClose, setPosts }) => {
+  const [text, setText] = useState("");
+  const [image, setImage] = useState(null);
+  const [preview, setPreview] = useState("");
 
-  // Şəkil seçiləndə işə düşən funksiya
-  const handleImageChange = (e) => {
+  if (!isOpen) return null;
+
+  const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setSelectedImage(file);
-      setPreview(URL.createObjectURL(file)); // Faylı müvəqqəti URL-ə çevirir
+      setImage(file);
+      setPreview(URL.createObjectURL(file)); // Şəkli modal daxilində göstərmək üçün
     }
   };
 
-  const handleAddPost = async () => {
-    if (!title.trim() && !selectedImage) return;
-
-    // Real API-yə göndərmək üçün FormData istifadə olunur (fayl göndərildiyi üçün)
-    const formData = new FormData();
-    formData.append("title", "Mahammad Talibli");
-    formData.append("body", title);
-    if (selectedImage) {
-      formData.append("image", selectedImage);
-    }
-
+  const handleShare = async () => {
     try {
-      // POST sorğusu (Nümunə URL)
-      // const response = await fetch('https://blog-api-t6u0.onrender.com/posts', {
-      //   method: 'POST',
-      //   body: formData,
-      // });
+      // Tapşırıq tələbi: API Post Request
+      const response = await fetch('https://jsonplaceholder.typicode.com/posts', {
+        method: 'POST',
+        body: JSON.stringify({
+          title: 'mahammad_talibli',
+          body: text,
+          userId: 1,
+        }),
+        headers: { 'Content-type': 'application/json' },
+      });
 
-      // State-i yeniləyirik (Local olaraq dərhal görmək üçün)
-      const newPost = { 
-        id: Date.now(), 
-        title: "Mahammad Talibli", 
-        body: title,
-        image: preview // Bizim seçdiyimiz şəkil
-      };
+      const data = await response.json();
 
-      setPosts((prev) => [newPost, ...prev]);
-      
+      // Yeni postu mərkəzi siyahıya əlavə edirik
+      setPosts(prev => [{
+        ...data,
+        id: Date.now(), // Real ID simulyasiyası
+        image: preview  // Seçilən şəkli Feed-də göstərmək üçün
+      }, ...prev]);
+
       // Təmizləmə
-      setTitle("");
-      setSelectedImage(null);
-      setPreview(null);
-      handleClose();
+      setText("");
+      setImage(null);
+      setPreview("");
+      onClose();
     } catch (err) {
-      console.error("Post göndərilmədi", err);
+      console.error("Post paylaşıla bilmədi:", err);
     }
   };
-
-  if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-white w-full max-w-[400px] rounded-xl shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 bg-black/70 z-[1000] flex items-center justify-center p-4 backdrop-blur-sm">
+      <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
+        <div className="p-4 border-b text-center font-bold text-gray-700">Yeni post yarat</div>
         
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-          <button onClick={handleClose}>✕</button>
-          <h2 className="text-base font-semibold">New Post</h2>
-          <button onClick={handleAddPost} className="text-blue-500 font-bold">Share</button>
-        </div>
-
-        <div className="p-4">
-          {/* Şəkil Preview Sahəsi */}
-          {preview ? (
-            <div className="relative mb-4">
-              <img src={preview} alt="preview" className="w-full h-64 object-cover rounded-lg" />
-              <button 
-                onClick={() => {setPreview(null); setSelectedImage(null);}}
-                className="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1"
-              >✕</button>
-            </div>
+        <div className="p-6">
+          {!preview ? (
+            <label className="flex flex-col items-center justify-center h-64 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 transition">
+              <span className="text-4xl mb-2">🖼️</span>
+              <span className="text-gray-500 font-medium">Şəkil seçin</span>
+              <input type="file" className="hidden" onChange={handleFileChange} accept="image/*" />
+            </label>
           ) : (
-            <div 
-              onClick={() => fileInputRef.current.click()}
-              className="w-full h-40 border-2 border-dashed border-gray-200 rounded-lg flex items-center justify-center cursor-pointer mb-4 hover:bg-gray-50"
-            >
-              <span className="text-gray-400">Click to upload photo</span>
+            <div className="relative h-64 w-full group">
+              <img src={preview} className="w-full h-full object-cover rounded-xl" alt="preview" />
+              <button 
+                onClick={() => setPreview("")}
+                className="absolute top-2 right-2 bg-black/50 text-white p-1 rounded-full text-xs"
+              >
+                Dəyiş
+              </button>
             </div>
           )}
 
-          <input 
-            type="file" 
-            accept="image/*" 
-            ref={fileInputRef} 
-            onChange={handleImageChange} 
-            className="hidden" 
+          <textarea 
+            className="w-full mt-6 p-3 bg-gray-50 rounded-xl focus:outline-none min-h-[100px] resize-none"
+            placeholder="Açıqlama əlavə et..."
+            value={text}
+            onChange={(e) => setText(e.target.value)}
           />
 
-          <textarea
-            className="w-full h-20 outline-none resize-none"
-            placeholder="Write a caption..."
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
+          <div className="flex gap-3 mt-6">
+            <button onClick={onClose} className="flex-1 py-3 text-gray-500 font-semibold hover:bg-gray-100 rounded-xl transition">Ləğv et</button>
+            <button 
+              onClick={handleShare}
+              disabled={!preview || !text}
+              className={`flex-1 py-3 rounded-xl font-semibold transition ${(!preview || !text) ? 'bg-blue-200 cursor-not-allowed' : 'bg-blue-500 text-white hover:bg-blue-600'}`}
+            >
+              Paylaş
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
 };
-
 
 export default CreatePostModal;
